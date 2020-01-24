@@ -19,7 +19,6 @@
 #include <condition_variable>
 
 
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,8 +28,6 @@
 #define COUNT_LIMIT 12
 
 int     count = 0;
-// pthread_mutex_t count_mutex;
-// pthread_cond_t count_threshold_cv;
 std::mutex count_mutex;
 std::condition_variable count_threshold_cv;
 
