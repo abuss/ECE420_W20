@@ -1,50 +1,73 @@
-/* File:    odd_even.c
+/* File:    omp_odd_even1.c
  *
  * Purpose: Use odd-even transposition sort to sort a list of ints.
  *
- * Compile: gcc -g -Wall -o odd_even odd_even.c
- * Run:     odd_even <n> <g|i>
+ * Compile: gcc -g -Wall -fopenmp -o omp_odd_even1 omp_odd_even1.c
+ * Usage:   ./omp_odd_even1 <thread count> <n> <g|i>
  *             n:   number of elements in list
  *            'g':  generate list using a random number generator
  *            'i':  user input list
  *
  * Input:   list (optional)
- * Output:  sorted list
+ * Output:  elapsed time for sort
  *
- * IPP:     Section 3.7.1 (p. 128) and Section 5.6.2 (pp. 233 and ff.)
+ * Notes:
+ * 1.  DEBUG flag prints the contents of the list
+ * 2.  This version forks and joins thread_count threads in each
+ *     iteration
+ * 3.  Uses the OpenMP library function omp_get_wtime for timing.
+ *     This function returns the number of seconds since some time 
+ *     in the past.
+ *
+ * IPP:  Section 5.6.2 (pp. 234 and ff.)
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <omp.h>
 
-/* Keys in the random list in the range 0 <= key < RMAX */
+#ifdef DEBUG
 const int RMAX = 100;
+#else
+const int RMAX = 10000000;
+#endif
+
+int thread_count;
 
 void Usage(char* prog_name);
 void Get_args(int argc, char* argv[], int* n_p, char* g_i_p);
 void Generate_list(int a[], int n);
 void Print_list(int a[], int n, char* title);
 void Read_list(int a[], int n);
-void Odd_even_sort(int a[], int n);
+void Odd_even(int a[], int n);
 
 /*-----------------------------------------------------------------*/
 int main(int argc, char* argv[]) {
    int  n;
    char g_i;
    int* a;
+   double start, finish;
 
    Get_args(argc, argv, &n, &g_i);
-   a = (int*) malloc(n*sizeof(int));
+   a = malloc(n*sizeof(int));
    if (g_i == 'g') {
       Generate_list(a, n);
+#     ifdef DEBUG
       Print_list(a, n, "Before sort");
+#     endif
    } else {
       Read_list(a, n);
    }
 
-   Odd_even_sort(a, n);
+   start = omp_get_wtime();
+   Odd_even(a, n);
+   finish = omp_get_wtime();
 
+#  ifdef DEBUG
    Print_list(a, n, "After sort");
+#  endif
    
+   printf("Elapsed time = %e seconds\n", finish - start);
+
    free(a);
    return 0;
 }  /* main */
@@ -55,7 +78,7 @@ int main(int argc, char* argv[]) {
  * Purpose:   Summary of how to run program
  */
 void Usage(char* prog_name) {
-   fprintf(stderr, "usage:   %s <n> <g|i>\n", prog_name);
+   fprintf(stderr, "usage:   %s <thread count> <n> <g|i>\n", prog_name);
    fprintf(stderr, "   n:   number of elements in list\n");
    fprintf(stderr, "  'g':  generate list using a random number generator\n");
    fprintf(stderr, "  'i':  user input list\n");
@@ -69,12 +92,13 @@ void Usage(char* prog_name) {
  * Out args:  n_p, g_i_p
  */
 void Get_args(int argc, char* argv[], int* n_p, char* g_i_p) {
-   if (argc != 3 ) {
+   if (argc != 4 ) {
       Usage(argv[0]);
       exit(0);
    }
-   *n_p = atoi(argv[1]);
-   *g_i_p = argv[2][0];
+   thread_count = strtol(argv[1], NULL, 10);
+   *n_p = strtol(argv[2], NULL, 10);
+   *g_i_p = argv[3][0];
 
    if (*n_p <= 0 || (*g_i_p != 'g' && *g_i_p != 'i') ) {
       Usage(argv[0]);
@@ -92,7 +116,7 @@ void Get_args(int argc, char* argv[], int* n_p, char* g_i_p) {
 void Generate_list(int a[], int n) {
    int i;
 
-   srandom(0);
+   srandom(1);
    for (i = 0; i < n; i++)
       a[i] = random() % RMAX;
 }  /* Generate_list */
@@ -129,36 +153,42 @@ void Read_list(int a[], int n) {
 
 
 /*-----------------------------------------------------------------
- * Function:     Odd_even_sort
+ * Function:     Odd_even
  * Purpose:      Sort list using odd-even transposition sort
  * In args:      n
  * In/out args:  a
  */
-void Odd_even_sort(
-      int  a[]  /* in/out */, 
-      int  n    /* in     */) {
-   int phase, i, temp;
+void Odd_even(int a[], int n) {
+   int phase, i, tmp;
+#  ifdef DEBUG
+   char title[100];
+#  endif
 
-   for (phase = 0; phase < n; phase++) 
-      if (phase % 2 == 0) { /* Even phase */
+   for (phase = 0; phase < n; phase++) {
+      if (phase % 2 == 0)
+#        pragma omp parallel for num_threads(thread_count) \
+            default(none) shared(a, n) private(i, tmp)
          for (i = 1; i < n; i += 2) {
-            printf("Phase %d Compare %d - %d\n",phase , i-1,i);
             if (a[i-1] > a[i]) {
-               temp = a[i];
-               a[i] = a[i-1];
-               a[i-1] = temp;
+               tmp = a[i-1];
+               a[i-1] = a[i];
+               a[i] = tmp;
             }
          }
-         printf("--------------------\n");
-      } else { /* Odd phase */
+      else
+#        pragma omp parallel for num_threads(thread_count) \
+            default(none) shared(a, n) private(i, tmp)
          for (i = 1; i < n-1; i += 2) {
-            printf("Phase %d Compare %d - %d\n",phase, i,i+1);
             if (a[i] > a[i+1]) {
-               temp = a[i];
-               a[i] = a[i+1];
-               a[i+1] = temp;
+               tmp = a[i+1];
+               a[i+1] = a[i];
+               a[i] = tmp;
             }
          }
-         printf("--------------------\n");
-      }
-}  /* Odd_even_sort */
+// #     ifdef DEBUG
+//       sprintf(title, "After phase %d", phase);
+//       Print_list(a, n, title);
+// #     endif
+   }
+}  /* Odd_even */
+

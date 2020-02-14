@@ -26,9 +26,9 @@ int main(int argc, char* argv[]) {
   #pragma omp parallel for num_threads(thread_count)  
   for (auto& e : vec)
   {
+    int my_rank = omp_get_thread_num();
+    printf("Iteration %d - Thread %d of %d\n", i, my_rank, thread_count);      
     e = ++i;
-    int my_rank = omp_get_thread_num();
-    printf("Iteration %d - Thread %d of %d\n", i, my_rank, thread_count);      
   }
 
   for (auto e : vec)
@@ -36,36 +36,36 @@ int main(int argc, char* argv[]) {
     std::cout << e << ", ";
   }
 
-  printf("\n----------------------\n");
+  // printf("\n----------------------\n");
 
-  i = 0;
-  #pragma omp parallel for num_threads(thread_count)  
-  for (auto itr=vec.begin(); itr!=vec.end(); ++itr)
-  {
-    *itr = ++i;
-    int my_rank = omp_get_thread_num();
-    printf("Iteration %d - Thread %d of %d\n", i, my_rank, thread_count);      
-  }
+  // i = 0;
+  // #pragma omp parallel for num_threads(thread_count)  
+  // for (auto itr=vec.begin(); itr!=vec.end(); ++itr)
+  // {
+  //   *itr = ++i;
+  //   int my_rank = omp_get_thread_num();
+  //   printf("Iteration %d - Thread %d of %d\n", i, my_rank, thread_count);      
+  // }
 
-  for (auto e : vec)
-  {
-    std::cout << e << ", ";
-  }
+  // for (auto e : vec)
+  // {
+  //   std::cout << e << ", ";
+  // }
 
-  printf("\n----------------------\n");
+  // printf("\n----------------------\n");
 
-  #pragma omp parallel for num_threads(thread_count)  
-  for (size_t i=0; i<vec.size(); ++i)
-  {
-    vec[i] = i+1;
-    int my_rank = omp_get_thread_num();
-    printf("Iteration %ld - Thread %d of %d\n", i, my_rank, thread_count);      
-  }
+  // #pragma omp parallel for num_threads(thread_count)  
+  // for (size_t i=0; i<vec.size(); ++i)
+  // {
+  //   vec[i] = i+1;
+  //   int my_rank = omp_get_thread_num();
+  //   printf("Iteration %ld - Thread %d of %d\n", i, my_rank, thread_count);      
+  // }
 
-  for (auto e : vec)
-  {
-    std::cout << e << ", ";
-  }
+  // for (auto e : vec)
+  // {
+  //   std::cout << e << ", ";
+  // }
 
   return 0; 
 }  /* main */

@@ -18,12 +18,12 @@
 int main(int argc, char* argv[]) {
    int thread_count = strtol(argv[1], NULL, 10); 
 
-#  pragma omp parallel num_threads(thread_count) 
-   {
-      int my_rank = omp_get_thread_num();
-
-      printf("Hello from thread %d of %d\n", my_rank, thread_count);
-   }
+# pragma omp parallel for num_threads(thread_count) schedule(runtime) 
+  for (int i = 0; i < 20; ++i)
+  {
+    int my_rank = omp_get_thread_num();
+    printf("Iteration %d - Thread %d of %d\n", i, my_rank, thread_count);      
+  }
 
    return 0; 
 }  /* main */
