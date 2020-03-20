@@ -1,0 +1,84 @@
+1   MatrixMatrixMultiply_NonBlocking(int n, double *a, double *b, 
+ 2                                    double *c, MPI_Comm comm) 
+ 3   { 
+ 4     int i, j, nlocal; 
+ 5     double *a_buffers[2], *b_buffers[2]; 
+ 6     int npes, dims[2], periods[2]; 
+ 7     int myrank, my2drank, mycoords[2]; 
+ 8     int uprank, downrank, leftrank, rightrank, coords[2]; 
+ 9     int shiftsource, shiftdest; 
+10     MPI_Status status; 
+11     MPI_Comm comm_2d; 
+12     MPI_Request reqs[4]; 
+13 
+14     /* Get the communicator related information */ 
+15     MPI_Comm_size(comm, &npes); 
+16     MPI_Comm_rank(comm, &myrank); 
+17 
+18     /* Set up the Cartesian topology */ 
+19     dims[0] = dims[1] = sqrt(npes); 
+20 
+21     /* Set the periods for wraparound connections */ 
+22     periods[0] = periods[1] = 1; 
+23 
+24     /* Create the Cartesian topology, with rank reordering */ 
+25     MPI_Cart_create(comm, 2, dims, periods, 1, &comm_2d); 
+26 
+27     /* Get the rank and coordinates with respect to the new topology */ 
+28     MPI_Comm_rank(comm_2d, &my2drank); 
+29     MPI_Cart_coords(comm_2d, my2drank, 2, mycoords); 
+30 
+31     /* Compute ranks of the up and left shifts */ 
+32     MPI_Cart_shift(comm_2d, 0, -1, &rightrank, &leftrank); 
+33     MPI_Cart_shift(comm_2d, 1, -1, &downrank, &uprank); 
+34 
+35     /* Determine the dimension of the local matrix block */ 
+36     nlocal = n/dims[0]; 
+37 
+38     /* Setup the a_buffers and b_buffers arrays */ 
+39     a_buffers[0] = a; 
+40     a_buffers[1] = (double *)malloc(nlocal*nlocal*sizeof(double)); 
+41     b_buffers[0] = b; 
+42     b_buffers[1] = (double *)malloc(nlocal*nlocal*sizeof(double)); 
+43 
+44     /* Perform the initial matrix alignment. First for A and then for B */ 
+45     MPI_Cart_shift(comm_2d, 0, -mycoords[0], &shiftsource, &shiftdest); 
+46     MPI_Sendrecv_replace(a_buffers[0], nlocal*nlocal, MPI_DOUBLE, 
+47         shiftdest, 1, shiftsource, 1, comm_2d, &status); 
+48 
+49     MPI_Cart_shift(comm_2d, 1, -mycoords[1], &shiftsource, &shiftdest); 
+50     MPI_Sendrecv_replace(b_buffers[0], nlocal*nlocal, MPI_DOUBLE, 
+51         shiftdest, 1, shiftsource, 1, comm_2d, &status); 
+52 
+53     /* Get into the main computation loop */ 
+54     for (i=0; i<dims[0]; i++) { 
+55       MPI_Isend(a_buffers[i%2], nlocal*nlocal, MPI_DOUBLE, 
+56           leftrank, 1, comm_2d, &reqs[0]); 
+57       MPI_Isend(b_buffers[i%2], nlocal*nlocal, MPI_DOUBLE, 
+58           uprank, 1, comm_2d, &reqs[1]); 
+59       MPI_Irecv(a_buffers[(i+1)%2], nlocal*nlocal, MPI_DOUBLE, 
+60           rightrank, 1, comm_2d, &reqs[2]); 
+61       MPI_Irecv(b_buffers[(i+1)%2], nlocal*nlocal, MPI_DOUBLE, 
+62           downrank, 1, comm_2d, &reqs[3]); 
+63 
+64       /* c = c + a*b */ 
+65       MatrixMultiply(nlocal, a_buffers[i%2], b_buffers[i%2], c); 
+66 
+67       for (j=0; j<4; j++) 
+68         MPI_Wait(&reqs[j], &status); 
+69     } 
+70 
+71     /* Restore the original distribution of a and b */ 
+72     MPI_Cart_shift(comm_2d, 0, +mycoords[0], &shiftsource, &shiftdest); 
+73     MPI_Sendrecv_replace(a_buffers[i%2], nlocal*nlocal, MPI_DOUBLE, 
+74         shiftdest, 1, shiftsource, 1, comm_2d, &status); 
+75 
+76     MPI_Cart_shift(comm_2d, 1, +mycoords[1], &shiftsource, &shiftdest); 
+77     MPI_Sendrecv_replace(b_buffers[i%2], nlocal*nlocal, MPI_DOUBLE, 
+78         shiftdest, 1, shiftsource, 1, comm_2d, &status); 
+79 
+80     MPI_Comm_free(&comm_2d); /* Free up communicator */ 
+81 
+82     free(a_buffers[1]); 
+83     free(b_buffers[1]); 
+84  }
