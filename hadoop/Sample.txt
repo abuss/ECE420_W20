@@ -1,0 +1,13 @@
+Alonzo Church (June 14, 1903 – August 11, 1995) was an American mathematician and logician who made major contributions to mathematical logic and the foundations of theoretical computer science. He is best known for the lambda calculus, Church–Turing thesis, proving the undecidability of the Entscheidungs problem, Frege–Church ontology, and the Church–Rosser theorem. He also worked on philosophy of language (see e.g. Church 1970). 
+
+Alonzo Church was born on June 14, 1903, in Washington, D.C., where his father, Samuel Robbins Church, was the judge of the Municipal Court for the District of Columbia. The family later moved to Virginia after his father lost this position because of failing eyesight. With help from his uncle, also named Alonzo Church, the son attended the private Ridgefield School for Boys in Ridgefield, Connecticut.[2] After graduating from Ridgefield in 1920, Church attended Princeton University, where he was an exceptional student. He published his first paper on Lorentz transformations and graduated in 1924 with a degree in mathematics. He stayed at Princeton for graduate work, earning a Ph.D. in mathematics in three years under Oswald Veblen.
+
+He married Mary Julia Kuczinski in 1925. The couple had three children, Alonzo Church, Jr. (1929), Mary Ann (1933) and Mildred (1938).
+
+After receiving his Ph.D., he taught briefly as an instructor at the University of Chicago. He received a two-year National Research Fellowship that enabled him to attend Harvard University in 1927–1928, and the University of Göttingen and University of Amsterdam the following year.
+
+He taught philosophy and mathematics at Princeton for nearly four decades, 1929–1967. He taught at the University of California, Los Angeles, 1967–1990. He was a Plenary Speaker at the ICM in 1962 in Stockholm.[3]
+
+He received honorary Doctor of Science degrees from Case Western Reserve University in 1969,[4] Princeton University in 1985,[5] and the University at Buffalo, The State University of New York in 1990 in connection with an international symposium in his honor organized by John Corcoran.[6]
+
+A deeply religious person, Church was a lifelong member of the Presbyterian church.[7] He died in 1995 and was buried in Princeton Cemetery. 
