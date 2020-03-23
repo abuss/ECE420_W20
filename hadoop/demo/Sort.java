@@ -71,6 +71,7 @@ public class Sort {
     }
     Job job = Job.getInstance(conf, "sort");
     job.setJarByClass(Sort.class);
+    
     job.setMapperClass(SortMapper.class);
     job.setReducerClass(SortReducer.class);
 
@@ -82,6 +83,7 @@ public class Sort {
     }
     FileOutputFormat.setOutputPath(job,
       new Path(otherArgs[otherArgs.length - 1]));
+
     System.exit(job.waitForCompletion(true) ? 0 : 1);
   }
 }
