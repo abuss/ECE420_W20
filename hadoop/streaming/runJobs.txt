@@ -1,0 +1,4 @@
+cat Sample.txt | ./mapper.py | sort -k 1,1 | ./reducer.py | ./inverseMap.py | sort -k 1,1 -n -r | ./reducer2.py
+
+hadoop jar hadoop-streaming.jar -input /Sample.txt -output strmOut -mapper /tmp/streaming/mapper.py  -reducer /tmp/streaming/reducer.py
+hadoop jar hadoop-streaming.jar -D mapred.output.key.comparator.class=org.apache.hadoop.mapred.lib.KeyFieldBasedComparator -D mapred.text.key.comparator.options="-n -r" -input strmOut -output strmOut2 -mapper /tmp/streaming/inverseMap.py  -reducer /tmp/streaming/reducer2.py
